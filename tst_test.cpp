@@ -1,9 +1,6 @@
 #include <QtTest>
 #include <QSignalSpy>
-#include "/home/jakob/testBenchLibrary/testbenchlibrary.h"
 #include "/home/jakob/testBenchLibrary/keycardsactuator.h"
-//#include "testbenchlibrary.h"
-// add necessary includes here
 
 class Test : public QObject
 {
@@ -16,84 +13,55 @@ public:
 private slots:
     void test_case1();
     void initTestCase();
+    void cleanupTestCase();
+
 private:
-    QCoreApplication *app;
-         //KeyCardsActuator* t_KeyCardsActuator;
+    QSerialPort *m_port{nullptr};
+    KeyCardsActuator *m_KeyCardsActuator{nullptr};
 };
 
-Test::Test()
-{
-    int argc = 0;
-    char *argv[] = { nullptr };
-    app = new QCoreApplication(argc, argv);
-
-    // QSerialPort port("/dev/ttyACM0");
-    // port.setBaudRate(QSerialPort::Baud115200);
-    // port.setDataBits(QSerialPort::Data8);
-    // port.setStopBits(QSerialPort::OneStop);
-    // port.setParity(QSerialPort::NoParity);
-    // port.setFlowControl(QSerialPort::NoFlowControl);
-    // if(!port.open(QIODevice::ReadWrite))
-    //     qDebug() << port.errorString();
-    // t_KeyCardsActuator=new KeyCardsActuator(&port);
-
-}
+Test::Test(){}
 
 void Test::initTestCase()
 {
+    m_port = new QSerialPort("/dev/ttyACM0");
+    m_port->setBaudRate(QSerialPort::Baud115200);
+    m_port->setDataBits(QSerialPort::Data8);
+    m_port->setStopBits(QSerialPort::OneStop);
+    m_port->setParity(QSerialPort::NoParity);
+    m_port->setFlowControl(QSerialPort::NoFlowControl);
+    if(!m_port->open(QIODevice::ReadWrite))
+        qDebug() << m_port->errorString();
 
+    m_KeyCardsActuator = new KeyCardsActuator(m_port);
+
+
+}
+
+void Test::cleanupTestCase()
+{
+    delete m_KeyCardsActuator;
+    delete m_port;
 }
 
 
 
 
 Test::~Test() {
-    //   delete t_KeyCardsActuator;
-
 }
 
-void Test::test_case1() {
+void Test::test_case1()
+{
+    QSignalSpy spy(m_KeyCardsActuator, &KeyCardsActuator::leftCardFinishedMoving);
 
-    QSerialPort port("/dev/ttyACM0");
-    port.setBaudRate(QSerialPort::Baud115200);
-    port.setDataBits(QSerialPort::Data8);
-    port.setStopBits(QSerialPort::OneStop);
-    port.setParity(QSerialPort::NoParity);
-    port.setFlowControl(QSerialPort::NoFlowControl);
-    if(!port.open(QIODevice::ReadWrite))
-        qDebug() << port.errorString();
+    m_KeyCardsActuator->approchLeftCard();
 
 
-    // KeyCardsActuator t_keyCardsActuator(&port);
-    KeyCardsActuator* t_keyCardsActuator=new KeyCardsActuator(&port);
-    //connect(t_keyCardsActuator,KeyCardsActuator::allCardMoveFinished,this,Test::test_case1);
-    // connect(&t_keyCardsActuator, &KeyCardsActuator::allCardMoveFinished, this,[&]() {
-    //     qDebug() << "Signal sent";
-    // });
-    //port.write("2\r\n");
-    //t_keyCardsActuator->moveCorrectCard();
-    t_keyCardsActuator->approchRightCard();
-    QSignalSpy spy(t_keyCardsActuator, &KeyCardsActuator::allCardMoveFinished);
+    spy.wait(4000);
 
-    // connect(&t_keyCardsActuator, &KeyCardsActuator::allCardMoveFinished, [&]() {
-    //     qDebug() << "Signal sent";
-    // });
+    // auto wasSpyCalled = spy.wait(7000);
 
-    //t_keyCardsActuator.approchRightCard();
-
-    if(!spy.wait(7000)){
-        qDebug()<<" Signal not emmited within timeout";
-
-    }else {
-        qDebug()<<" Signal emmited and captured";
-
-    }
-    qDebug()<<"Right status: "<<t_keyCardsActuator->rightCardStatus();
-
-    //t_KeyCardsActuator->approchRightCard(); //?
-    // delete app;
-    // port.close();
-    QCOMPARE(2,2);
+    // QCOMPARE(wasSpyCalled, true);
 
 }
 
