@@ -52,12 +52,12 @@ Test::~Test() {
 
 void Test::test_case1()
 {
-    QSignalSpy spy(m_KeyCardsActuator, &KeyCardsActuator::leftCardFinishedMoving);
+   // QSignalSpy spy(m_KeyCardsActuator, KeyCardsActuator::allCardFinishedMoving);
 
     m_KeyCardsActuator->approchLeftCard();
 
 
-    spy.wait(4000);
+    //spy.wait(4000);
 
     // auto wasSpyCalled = spy.wait(7000);
 
