@@ -11,7 +11,7 @@ public:
     ~Test();
 
 private slots:
-    void test_case1();
+    void test_wrongCardsDoesNotUnlock();
     void initTestCase();
     void cleanupTestCase();
 
@@ -59,28 +59,17 @@ void Test::cleanupTestCase()
 Test::~Test() {
 }
 
-void Test::test_case1()
+void Test::test_wrongCardsDoesNotUnlock()
 {
-<<<<<<< Updated upstream
-   // QSignalSpy spy(m_KeyCardsActuator, KeyCardsActuator::allCardFinishedMoving);
+
+    QSignalSpy spy(m_KeyCardsActuator, &KeyCardsActuator::leftCardFinishedMoving);
+    auto wasSpyCalled = spy.wait(7000);
+
 
     m_KeyCardsActuator->approchLeftCard();
-=======
-    QSignalSpy spy(m_KeyCardsActuator, &KeyCardsActuator::ghost);
->>>>>>> Stashed changes
 
-    m_KeyCardsActuator->approchRightCard();
 
-<<<<<<< Updated upstream
-    //spy.wait(4000);
-
-    // auto wasSpyCalled = spy.wait(7000);
-=======
-    auto wasSpyCalled = spy.wait(7000);
->>>>>>> Stashed changes
-
-    // QCOMPARE(wasSpyCalled, true);
-    // QCOMPARE(spy.wait(10000),true);
+    QCOMPARE(wasSpyCalled,true);
 }
 
 
