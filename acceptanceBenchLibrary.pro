@@ -10,7 +10,7 @@ SOURCES +=  tst_test.cpp
 
 unix:!macx: LIBS += -L$$PWD/../build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug/ -ltestBenchLibrary
 
-INCLUDEPATH += $$PWD/../build-testBenchLibrary-Desktop_Qt_6_5_3_GCC_64bit-Debug
-DEPENDPATH += $$PWD/../build-testBenchLibrary-Desktop_Qt_6_5_3_GCC_64bit-Debug
+INCLUDEPATH += $$PWD/../build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug
+DEPENDPATH += $$PWD/../build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug
 
 unix:!macx: PRE_TARGETDEPS += $$PWD/../build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug/libtestBenchLibrary.a
