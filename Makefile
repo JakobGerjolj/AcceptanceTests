@@ -17,7 +17,7 @@ CXX           = aarch64-linux-gnu-g++
 DEFINES       = -DQT_TESTLIB_LIB -DQT_SERIALBUS_LIB -DQT_NETWORK_LIB -DQT_SERIALPORT_LIB -DQT_CORE_LIB -DQT_TESTCASE_BUILDDIR='"/home/jakob/acceptanceBenchLibrary"' -DQT_QML_DEBUG
 CFLAGS        = -pipe -march=armv8-a --sysroot=/home/jakob/rpi-sysroot -g -Wall -Wextra -D_REENTRANT $(DEFINES)
 CXXFLAGS      = -pipe -pipe -march=armv8-a --sysroot=/home/jakob/rpi-sysroot -g -std=gnu++1z -Wall -Wextra -D_REENTRANT $(DEFINES)
-INCPATH       = -I. -I../build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug -I../qt-raspi/include -I../qt-raspi/include/QtTest -I../qt-raspi/include/QtSerialBus -I../qt-raspi/include/QtNetwork -I../qt-raspi/include/QtSerialPort -I../qt-raspi/include/QtCore -I. -I../qt-raspi/mkspecs/devices/linux-rasp-pi4-aarch64
+INCPATH       = -I. -I../rpi-sysroot/usr/include -I../build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug -I../qt-raspi/include -I../qt-raspi/include/QtTest -I../qt-raspi/include/QtSerialBus -I../qt-raspi/include/QtNetwork -I../qt-raspi/include/QtSerialPort -I../qt-raspi/include/QtCore -I. -I../qt-raspi/mkspecs/devices/linux-rasp-pi4-aarch64
 QMAKE         = /home/jakob/qt-host/bin/qmake6
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -40,7 +40,7 @@ DISTNAME      = acceptanceBenchLibrary1.0.0
 DISTDIR = /home/jakob/acceptanceBenchLibrary/.tmp/acceptanceBenchLibrary1.0.0
 LINK          = aarch64-linux-gnu-g++
 LFLAGS        = -Wl,-O1 -Wl,--hash-style=gnu -Wl,--as-needed --sysroot=/home/jakob/rpi-sysroot -Wl,-rpath,/usr/local/qt6/lib -Wl,-rpath-link,/home/jakob/rpi-sysroot/usr/lib/aarch64-linux-gnu -Wl,-rpath-link,/home/jakob/rpi-sysroot/lib/aarch64-linux-gnu
-LIBS          = $(SUBLIBS) -L/home/jakob/acceptanceBenchLibrary/../build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug/ -ltestBenchLibrary /home/jakob/qt-raspi/lib/libQt6Test.so /home/jakob/qt-raspi/lib/libQt6SerialBus.so /home/jakob/qt-raspi/lib/libQt6Network.so /home/jakob/qt-raspi/lib/libQt6SerialPort.so /home/jakob/qt-raspi/lib/libQt6Core.so -lpthread   
+LIBS          = $(SUBLIBS) -L/home/jakob/rpi-sysroot/usr/lib -lwiringPi -L/home/jakob/acceptanceBenchLibrary/../build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug/ -ltestBenchLibrary /home/jakob/qt-raspi/lib/libQt6Test.so /home/jakob/qt-raspi/lib/libQt6SerialBus.so /home/jakob/qt-raspi/lib/libQt6Network.so /home/jakob/qt-raspi/lib/libQt6SerialPort.so /home/jakob/qt-raspi/lib/libQt6Core.so -lpthread   
 AR            = aarch64-linux-gnu-ar cqs
 RANLIB        = 
 SED           = sed
@@ -554,6 +554,9 @@ tst_test.moc: tst_test.cpp \
 		../qt-raspi/include/QtCore/QtCore \
 		../qt-raspi/include/QtCore/QtCoreDepends \
 		../qt-raspi/include/QtCore/qglobal.h \
+		../rpi-sysroot/usr/include/assert.h \
+		../rpi-sysroot/usr/include/features.h \
+		../rpi-sysroot/usr/include/stdc-predef.h \
 		../qt-raspi/include/QtCore/qtversionchecks.h \
 		../qt-raspi/include/QtCore/qconfig.h \
 		../qt-raspi/include/QtCore/qtcore-config.h \
@@ -613,6 +616,8 @@ tst_test.moc: tst_test.cpp \
 		../qt-raspi/include/QtCore/qrefcount.h \
 		../qt-raspi/include/QtCore/qarraydata.h \
 		../qt-raspi/include/QtCore/qpair.h \
+		../rpi-sysroot/usr/include/string.h \
+		../rpi-sysroot/usr/include/strings.h \
 		../qt-raspi/include/QtCore/qarraydatapointer.h \
 		../qt-raspi/include/QtCore/qarraydataops.h \
 		../qt-raspi/include/QtCore/qcontainertools_impl.h \
@@ -621,6 +626,8 @@ tst_test.moc: tst_test.cpp \
 		../qt-raspi/include/QtCore/qbytearrayview.h \
 		../qt-raspi/include/QtCore/qstringfwd.h \
 		../qt-raspi/include/QtCore/q20type_traits.h \
+		../rpi-sysroot/usr/include/stdlib.h \
+		../rpi-sysroot/usr/include/alloca.h \
 		../qt-raspi/include/QtCore/qstringliteral.h \
 		../qt-raspi/include/QtCore/qstringalgorithms.h \
 		../qt-raspi/include/QtCore/qanystringview.h \
@@ -657,7 +664,9 @@ tst_test.moc: tst_test.cpp \
 		../qt-raspi/include/QtCore/qdebug.h \
 		../qt-raspi/include/QtCore/qtextstream.h \
 		../qt-raspi/include/QtCore/qstringconverter_base.h \
+		../rpi-sysroot/usr/include/stdio.h \
 		../qt-raspi/include/QtCore/qcontiguouscache.h \
+		../rpi-sysroot/usr/include/limits.h \
 		../qt-raspi/include/QtCore/qsharedpointer.h \
 		../qt-raspi/include/QtCore/qshareddata.h \
 		../qt-raspi/include/QtCore/qsharedpointer_impl.h \
@@ -769,6 +778,7 @@ tst_test.moc: tst_test.cpp \
 		../qt-raspi/include/QtCore/qsequentialanimationgroup.h \
 		../qt-raspi/include/QtCore/qsequentialiterable.h \
 		../qt-raspi/include/QtCore/qsettings.h \
+		../rpi-sysroot/usr/include/ctype.h \
 		../qt-raspi/include/QtCore/qsharedmemory.h \
 		../qt-raspi/include/QtCore/qsignalmapper.h \
 		../qt-raspi/include/QtCore/qsimd.h \
@@ -933,10 +943,12 @@ tst_test.moc: tst_test.cpp \
 		../qt-raspi/include/QtSerialPort/qserialport.h \
 		../qt-raspi/include/QtSerialPort/qserialportglobal.h \
 		../qt-raspi/include/QtSerialPort/qtserialportexports.h \
+		../testBenchLibrary/buttons.h \
+		../rpi-sysroot/usr/include/wiringPi.h \
 		../qt-raspi/include/QtCore/qtmochelpers.h \
 		moc_predefs.h \
 		../qt-host/libexec/moc
-	/home/jakob/qt-host/libexec/moc $(DEFINES) --include /home/jakob/acceptanceBenchLibrary/moc_predefs.h -I/home/jakob/qt-raspi/mkspecs/devices/linux-rasp-pi4-aarch64 -I/home/jakob/acceptanceBenchLibrary -I/home/jakob/build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug -I/home/jakob/qt-raspi/include -I/home/jakob/qt-raspi/include/QtTest -I/home/jakob/qt-raspi/include/QtSerialBus -I/home/jakob/qt-raspi/include/QtNetwork -I/home/jakob/qt-raspi/include/QtSerialPort -I/home/jakob/qt-raspi/include/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include tst_test.cpp -o tst_test.moc
+	/home/jakob/qt-host/libexec/moc $(DEFINES) --include /home/jakob/acceptanceBenchLibrary/moc_predefs.h -I/home/jakob/qt-raspi/mkspecs/devices/linux-rasp-pi4-aarch64 -I/home/jakob/acceptanceBenchLibrary -I/home/jakob/rpi-sysroot/usr/include -I/home/jakob/build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug -I/home/jakob/qt-raspi/include -I/home/jakob/qt-raspi/include/QtTest -I/home/jakob/qt-raspi/include/QtSerialBus -I/home/jakob/qt-raspi/include/QtNetwork -I/home/jakob/qt-raspi/include/QtSerialPort -I/home/jakob/qt-raspi/include/QtCore -I/usr/include/c++/9 -I/usr/include/x86_64-linux-gnu/c++/9 -I/usr/include/c++/9/backward -I/usr/lib/gcc/x86_64-linux-gnu/9/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include tst_test.cpp -o tst_test.moc
 
 compiler_yacc_decl_make_all:
 compiler_yacc_decl_clean:
@@ -953,6 +965,9 @@ tst_test.o: tst_test.cpp ../qt-raspi/include/QtTest/QtTest \
 		../qt-raspi/include/QtCore/QtCore \
 		../qt-raspi/include/QtCore/QtCoreDepends \
 		../qt-raspi/include/QtCore/qglobal.h \
+		../rpi-sysroot/usr/include/assert.h \
+		../rpi-sysroot/usr/include/features.h \
+		../rpi-sysroot/usr/include/stdc-predef.h \
 		../qt-raspi/include/QtCore/qtversionchecks.h \
 		../qt-raspi/include/QtCore/qconfig.h \
 		../qt-raspi/include/QtCore/qtcore-config.h \
@@ -1012,6 +1027,8 @@ tst_test.o: tst_test.cpp ../qt-raspi/include/QtTest/QtTest \
 		../qt-raspi/include/QtCore/qrefcount.h \
 		../qt-raspi/include/QtCore/qarraydata.h \
 		../qt-raspi/include/QtCore/qpair.h \
+		../rpi-sysroot/usr/include/string.h \
+		../rpi-sysroot/usr/include/strings.h \
 		../qt-raspi/include/QtCore/qarraydatapointer.h \
 		../qt-raspi/include/QtCore/qarraydataops.h \
 		../qt-raspi/include/QtCore/qcontainertools_impl.h \
@@ -1020,6 +1037,8 @@ tst_test.o: tst_test.cpp ../qt-raspi/include/QtTest/QtTest \
 		../qt-raspi/include/QtCore/qbytearrayview.h \
 		../qt-raspi/include/QtCore/qstringfwd.h \
 		../qt-raspi/include/QtCore/q20type_traits.h \
+		../rpi-sysroot/usr/include/stdlib.h \
+		../rpi-sysroot/usr/include/alloca.h \
 		../qt-raspi/include/QtCore/qstringliteral.h \
 		../qt-raspi/include/QtCore/qstringalgorithms.h \
 		../qt-raspi/include/QtCore/qanystringview.h \
@@ -1056,7 +1075,9 @@ tst_test.o: tst_test.cpp ../qt-raspi/include/QtTest/QtTest \
 		../qt-raspi/include/QtCore/qdebug.h \
 		../qt-raspi/include/QtCore/qtextstream.h \
 		../qt-raspi/include/QtCore/qstringconverter_base.h \
+		../rpi-sysroot/usr/include/stdio.h \
 		../qt-raspi/include/QtCore/qcontiguouscache.h \
+		../rpi-sysroot/usr/include/limits.h \
 		../qt-raspi/include/QtCore/qsharedpointer.h \
 		../qt-raspi/include/QtCore/qshareddata.h \
 		../qt-raspi/include/QtCore/qsharedpointer_impl.h \
@@ -1168,6 +1189,7 @@ tst_test.o: tst_test.cpp ../qt-raspi/include/QtTest/QtTest \
 		../qt-raspi/include/QtCore/qsequentialanimationgroup.h \
 		../qt-raspi/include/QtCore/qsequentialiterable.h \
 		../qt-raspi/include/QtCore/qsettings.h \
+		../rpi-sysroot/usr/include/ctype.h \
 		../qt-raspi/include/QtCore/qsharedmemory.h \
 		../qt-raspi/include/QtCore/qsignalmapper.h \
 		../qt-raspi/include/QtCore/qsimd.h \
@@ -1332,6 +1354,8 @@ tst_test.o: tst_test.cpp ../qt-raspi/include/QtTest/QtTest \
 		../qt-raspi/include/QtSerialPort/qserialport.h \
 		../qt-raspi/include/QtSerialPort/qserialportglobal.h \
 		../qt-raspi/include/QtSerialPort/qtserialportexports.h \
+		../testBenchLibrary/buttons.h \
+		../rpi-sysroot/usr/include/wiringPi.h \
 		tst_test.moc \
 		../qt-raspi/include/QtCore/qtmochelpers.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tst_test.o tst_test.cpp

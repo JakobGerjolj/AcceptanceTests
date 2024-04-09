@@ -9,7 +9,11 @@ TEMPLATE = app
 
 SOURCES +=  tst_test.cpp
 
-unix:!macx: LIBS += -L$$PWD/../build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug/ -ltestBenchLibrary
+INCLUDEPATH += /home/jakob/rpi-sysroot/usr/include/
+
+LIBS += -L"/home/jakob/rpi-sysroot/usr/lib" -lwiringPi
+LIBS += -L$$PWD/../build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug/ -ltestBenchLibrary
+
 
 INCLUDEPATH += $$PWD/../build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug
 DEPENDPATH += $$PWD/../build-testBenchLibrary-Qt_6_5_3_qt_raspi-Debug

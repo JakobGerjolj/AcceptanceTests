@@ -3,6 +3,8 @@
 #include <QCanBus>
 #include <QDebug>
 #include "../testBenchLibrary/keycardsactuator.h"
+#include "../testBenchLibrary/buttons.h"
+#include <wiringPi.h>
 
 class Test : public QObject
 {
@@ -18,13 +20,18 @@ private slots:
     void test_rightCardsDoesUnlock();
     void test_wrongCardDoesnNotLock();
     void test_rightCardLocks();
+    void test_pressDock();
     void cleanupTestCase();
 
 private:
+    const int m_POWER_PIN = 4;
     QCoreApplication *app{nullptr};
     QSerialPort *m_port{nullptr};
     KeyCardsActuator *m_KeyCardsActuator{nullptr};
+    Buttons *m_buttons{nullptr};
     QCanBusDevice *m_device{nullptr};
+    //Buttons *m_buttons{nullptr};
+
 
     QList<QCanBusFrame> m_recivedFrames;
     QString errorString;
@@ -36,6 +43,12 @@ Test::Test(){}
 void Test::initTestCase()
 {
 
+
+    wiringPiSetup();
+    pinMode(m_POWER_PIN, OUTPUT);
+    digitalWrite(m_POWER_PIN,LOW);
+    delay(2500);
+    m_buttons=new Buttons;
     int argc = 0;
     char *argv[] = { nullptr };
     app = new QCoreApplication(argc, argv);
@@ -49,10 +62,11 @@ void Test::initTestCase()
     m_port->setFlowControl(QSerialPort::NoFlowControl);
     if(!m_port->open(QIODevice::ReadWrite))
         qDebug() << m_port->errorString();
+    else qDebug()<< "Port open";
 
     m_KeyCardsActuator = new KeyCardsActuator(m_port);
 
-    m_port->clear();
+    //m_port->clear();//digitalWrite(LED_PIN,HIGH);
 
     m_device = QCanBus::instance()->createDevice(
         QStringLiteral("socketcan"), QStringLiteral("slcan0"), &errorString);
@@ -63,6 +77,8 @@ void Test::initTestCase()
         m_device->connectDevice();
     }
 
+
+
     connect(m_device, &QCanBusDevice::framesReceived, this, [=](){
         m_recivedFrames.append(m_device->readAllFrames());
     });
@@ -70,10 +86,14 @@ void Test::initTestCase()
 
 void Test::cleanupTestCase()
 {
+    delay(2500);
+    digitalWrite(m_POWER_PIN,HIGH);
+    m_port->close();
     delete m_KeyCardsActuator;
     delete m_port;
     delete app;
     delete m_device;
+
 }
 
 
@@ -90,7 +110,7 @@ void Test::test_wrongCardsDoesNotUnlock()
     m_KeyCardsActuator->approchLeftCard();
 
     auto wasSpyCalled = spy.wait(7000);
-    //QCOMPARE(wasSpyCalled,true);
+    QCOMPARE(wasSpyCalled,true);
 
     bool wasWrongCardMessageRecived = false;
 
@@ -101,6 +121,7 @@ void Test::test_wrongCardsDoesNotUnlock()
         }
     }
     QCOMPARE(wasWrongCardMessageRecived, true);
+
 }
 
 void Test::test_rightCardsDoesUnlock()
@@ -109,6 +130,7 @@ void Test::test_rightCardsDoesUnlock()
     //should be locked here
     QSignalSpy spy(m_KeyCardsActuator, &KeyCardsActuator::rightCardFinishedMoving);
     m_KeyCardsActuator ->approchRightCard();
+
 
     auto wasSpyCalled = spy.wait(7000);
     //QCOMPARE(wasSpyCalled,true);
@@ -120,9 +142,9 @@ void Test::test_rightCardsDoesUnlock()
         {
             wasLeverUnlocked = true;
         }
-
-
     }
+
+    //m_KeyCardsActuator ->approchRightCard();
     QCOMPARE(wasLeverUnlocked,true);
 
 
@@ -131,13 +153,19 @@ void Test::test_rightCardsDoesUnlock()
 void Test::test_wrongCardDoesnNotLock()
 {
     QSKIP("Test already tested!");
+
+    QSignalSpy setupSpy(m_KeyCardsActuator,&KeyCardsActuator::rightCardFinishedMoving);
+    m_KeyCardsActuator->approchRightCard();
+    auto isSetup=setupSpy.wait(7000);
+    QCOMPARE(isSetup,true);
+
     //should be unlocked here
     //mabe state of lever in class
     QSignalSpy spy(m_KeyCardsActuator,&KeyCardsActuator::leftCardFinishedMoving);
     m_KeyCardsActuator -> approchLeftCard();
 
     auto wasSpyCalled = spy.wait(7000);
-    //QCOMPARE(wasSpyCalled,true);
+    QCOMPARE(wasSpyCalled,true);
 
     bool wasLeverLocked=false;
 
@@ -155,7 +183,13 @@ void Test::test_wrongCardDoesnNotLock()
 void Test::test_rightCardLocks()
 {
     QSKIP("Test already tested!");
-    //should be unlocked here
+    QSignalSpy setupSpy(m_KeyCardsActuator, &KeyCardsActuator::rightCardFinishedMoving);
+    m_KeyCardsActuator-> approchRightCard();
+
+    auto wasSetup=setupSpy.wait(7000); //unlocking card
+
+    QCOMPARE(wasSetup,true);
+
     QSignalSpy spy(m_KeyCardsActuator,&KeyCardsActuator::rightCardFinishedMoving);
     m_KeyCardsActuator -> approchRightCard();
 
@@ -173,6 +207,15 @@ void Test::test_rightCardLocks()
 
     QCOMPARE(wasLeverLocked,true);
 
+}
+
+void Test::test_pressDock()
+{
+    //m_buttons->pressDock();
+    //QSKIP("");
+    m_buttons->pressDock();
+
+    QCOMPARE(true,true);
 }
 
 
