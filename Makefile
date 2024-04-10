@@ -945,6 +945,12 @@ tst_test.moc: tst_test.cpp \
 		../qt-raspi/include/QtSerialPort/qtserialportexports.h \
 		../testBenchLibrary/buttons.h \
 		../rpi-sysroot/usr/include/wiringPi.h \
+		../testBenchLibrary/camera.h \
+		../qt-raspi/include/QtCore/QProcess \
+		../qt-raspi/include/QtCore/QTimer \
+		../qt-raspi/include/QtCore/QFile \
+		../qt-raspi/include/QtCore/QJsonDocument \
+		../qt-raspi/include/QtCore/QJsonObject \
 		../qt-raspi/include/QtCore/qtmochelpers.h \
 		moc_predefs.h \
 		../qt-host/libexec/moc
@@ -1356,6 +1362,12 @@ tst_test.o: tst_test.cpp ../qt-raspi/include/QtTest/QtTest \
 		../qt-raspi/include/QtSerialPort/qtserialportexports.h \
 		../testBenchLibrary/buttons.h \
 		../rpi-sysroot/usr/include/wiringPi.h \
+		../testBenchLibrary/camera.h \
+		../qt-raspi/include/QtCore/QProcess \
+		../qt-raspi/include/QtCore/QTimer \
+		../qt-raspi/include/QtCore/QFile \
+		../qt-raspi/include/QtCore/QJsonDocument \
+		../qt-raspi/include/QtCore/QJsonObject \
 		tst_test.moc \
 		../qt-raspi/include/QtCore/qtmochelpers.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o tst_test.o tst_test.cpp

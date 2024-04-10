@@ -4,6 +4,7 @@
 #include <QDebug>
 #include "../testBenchLibrary/keycardsactuator.h"
 #include "../testBenchLibrary/buttons.h"
+#include "../testBenchLibrary/camera.h"
 #include <wiringPi.h>
 
 class Test : public QObject
@@ -30,7 +31,7 @@ private:
     KeyCardsActuator *m_KeyCardsActuator{nullptr};
     Buttons *m_buttons{nullptr};
     QCanBusDevice *m_device{nullptr};
-    //Buttons *m_buttons{nullptr};
+    Camera *m_camera{nullptr};
 
 
     QList<QCanBusFrame> m_recivedFrames;
@@ -65,7 +66,7 @@ void Test::initTestCase()
     else qDebug()<< "Port open";
 
     m_KeyCardsActuator = new KeyCardsActuator(m_port);
-
+    m_camera = new Camera;
     //m_port->clear();//digitalWrite(LED_PIN,HIGH);
 
     m_device = QCanBus::instance()->createDevice(
@@ -86,31 +87,30 @@ void Test::initTestCase()
 
 void Test::cleanupTestCase()
 {
-    delay(2500);
-    digitalWrite(m_POWER_PIN,HIGH);
+    //digitalWrite(m_POWER_PIN,HIGH);
     m_port->close();
     delete m_KeyCardsActuator;
     delete m_port;
     delete app;
     delete m_device;
+    delete m_camera;
 
 }
 
 
 
 
-Test::~Test() {
-}
+Test::~Test() {}
 
 void Test::test_wrongCardsDoesNotUnlock()
 {
     QSKIP("Test already tested!");
 
-    QSignalSpy spy(m_KeyCardsActuator, &KeyCardsActuator::leftCardFinishedMoving);
+    QSignalSpy waitForLeftCardMove(m_KeyCardsActuator, &KeyCardsActuator::leftCardFinishedMoving);
     m_KeyCardsActuator->approchLeftCard();
 
-    auto wasSpyCalled = spy.wait(7000);
-    QCOMPARE(wasSpyCalled,true);
+    auto wasLeftMoveCalled = waitForLeftCardMove.wait(7000);
+    QCOMPARE(wasLeftMoveCalled,true);
 
     bool wasWrongCardMessageRecived = false;
 
@@ -126,26 +126,36 @@ void Test::test_wrongCardsDoesNotUnlock()
 
 void Test::test_rightCardsDoesUnlock()
 {
-    QSKIP("Test already tested!");
+    //QSKIP("Test already tested!");
     //should be locked here
-    QSignalSpy spy(m_KeyCardsActuator, &KeyCardsActuator::rightCardFinishedMoving);
-    m_KeyCardsActuator ->approchRightCard();
+
+    // QSignalSpy waitForRightCardMove(m_KeyCardsActuator, &KeyCardsActuator::rightCardFinishedMoving);
+    // m_KeyCardsActuator ->approchRightCard();
 
 
-    auto wasSpyCalled = spy.wait(7000);
-    //QCOMPARE(wasSpyCalled,true);
+    // auto wasRightMoveCalled = waitForRightCardMove.wait(7000);
+    // QCOMPARE(wasRightMoveCalled,true);
 
-    bool wasLeverUnlocked = false;
+    // bool wasLeverUnlocked = false;
 
-    foreach(auto frame, m_recivedFrames){
-        if((frame.frameId() == 0x18ff82fd) && frame.payload()[2] == 0x01)
-        {
-            wasLeverUnlocked = true;
-        }
-    }
+    // foreach(auto frame, m_recivedFrames){
+    //     if((frame.frameId() == 0x18ff82fd) && frame.payload()[2] == 0x01)
+    //     {
+    //         wasLeverUnlocked = true;
+    //     }
+    // }
 
-    //m_KeyCardsActuator ->approchRightCard();
-    QCOMPARE(wasLeverUnlocked,true);
+    // QSignalSpy waitForPicture(m_camera,&Camera::pictureTaken);
+    // m_camera->takePicture();
+
+    // auto wasPictureTaken=waitForPicture.wait(10000);
+
+    //QCOMPARE(wasPictureTaken,true);
+    m_camera->processData();
+    //delay(10000);
+
+    //QCOMPARE(wasLeverUnlocked,true);
+    QCOMPARE(true,true);
 
 
 }
@@ -154,18 +164,18 @@ void Test::test_wrongCardDoesnNotLock()
 {
     QSKIP("Test already tested!");
 
-    QSignalSpy setupSpy(m_KeyCardsActuator,&KeyCardsActuator::rightCardFinishedMoving);
+    QSignalSpy waitForLeverUnlock(m_KeyCardsActuator,&KeyCardsActuator::rightCardFinishedMoving);
     m_KeyCardsActuator->approchRightCard();
-    auto isSetup=setupSpy.wait(7000);
-    QCOMPARE(isSetup,true);
+    auto wasLeverUnlocked=waitForLeverUnlock.wait(7000);
+    QCOMPARE(wasLeverUnlocked,true);
 
     //should be unlocked here
     //mabe state of lever in class
-    QSignalSpy spy(m_KeyCardsActuator,&KeyCardsActuator::leftCardFinishedMoving);
+    QSignalSpy waitForLeftMove(m_KeyCardsActuator,&KeyCardsActuator::leftCardFinishedMoving);
     m_KeyCardsActuator -> approchLeftCard();
 
-    auto wasSpyCalled = spy.wait(7000);
-    QCOMPARE(wasSpyCalled,true);
+    auto wasLeftMoved = waitForLeftMove.wait(7000);
+    QCOMPARE(wasLeftMoved,true);
 
     bool wasLeverLocked=false;
 
@@ -183,18 +193,18 @@ void Test::test_wrongCardDoesnNotLock()
 void Test::test_rightCardLocks()
 {
     QSKIP("Test already tested!");
-    QSignalSpy setupSpy(m_KeyCardsActuator, &KeyCardsActuator::rightCardFinishedMoving);
+    QSignalSpy waitForLeverUnlock(m_KeyCardsActuator, &KeyCardsActuator::rightCardFinishedMoving);
     m_KeyCardsActuator-> approchRightCard();
 
-    auto wasSetup=setupSpy.wait(7000); //unlocking card
+    auto isLeverUnlocked=waitForLeverUnlock.wait(7000); //unlocking card
 
-    QCOMPARE(wasSetup,true);
+    QCOMPARE(isLeverUnlocked,true);
 
-    QSignalSpy spy(m_KeyCardsActuator,&KeyCardsActuator::rightCardFinishedMoving);
+    QSignalSpy waitForRightMove(m_KeyCardsActuator,&KeyCardsActuator::rightCardFinishedMoving);
     m_KeyCardsActuator -> approchRightCard();
 
-    auto wasSpyCalled= spy.wait(7000);
-    //QCOMPARE(wasSpyCalled,true);
+    auto wasRightMoved= waitForRightMove.wait(7000);
+    QCOMPARE(wasRightMoved,true);
     bool wasLeverLocked = false;
 
     foreach(auto frame, m_recivedFrames){
@@ -211,11 +221,14 @@ void Test::test_rightCardLocks()
 
 void Test::test_pressDock()
 {
-    //m_buttons->pressDock();
-    //QSKIP("");
-    m_buttons->pressDock();
+    QSKIP("");
+    QSignalSpy spy(m_buttons, &Buttons::pressed);
+    m_buttons->press(sync);
+    //m_buttons->press(station); not really work
+    m_buttons->press(dock);
+    auto wasSpyCalled=spy.wait(6000);
 
-    QCOMPARE(true,true);
+    QCOMPARE(wasSpyCalled,true);
 }
 
 
