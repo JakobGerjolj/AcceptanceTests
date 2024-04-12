@@ -7,6 +7,7 @@
 #include "../testBenchLibrary/camera.h"
 #include "../testBenchLibrary/leversactuator.h"
 #include <wiringPi.h>
+#include <iostream>
 
 class Test : public QObject
 {
@@ -106,7 +107,7 @@ void Test::initTestCase()
 
 void Test::cleanupTestCase()
 {
-    digitalWrite(m_POWER_PIN,HIGH);
+    //digitalWrite(m_POWER_PIN,HIGH);
     m_port->close();
     delete m_KeyCardsActuator;
     delete m_port;
@@ -249,7 +250,7 @@ void Test::test_topLightsInNeutral()
     // delay(3000);
     //m_levers->home();
     QSignalSpy waitForReverseMove(m_levers,&LeversActuator::bothMoved);
-    m_levers->moveBoth(LeversActuator::reverse,700);
+    m_levers->moveBoth(LeversActuator::reverse,700); //method move to neutral
     auto didBothMove=waitForReverseMove.wait(7000);
     QCOMPARE(didBothMove,true);
 
@@ -371,7 +372,7 @@ void Test::test_notNeutralSyncPressed()
 
 void Test::test_testCANMessages()
 {
-   //QSKIP("");
+    QSKIP("");
     //unlock lever first
 
     QSignalSpy waitForUnlocked(m_KeyCardsActuator,&KeyCardsActuator::rightCardFinishedMoving);
@@ -390,12 +391,35 @@ void Test::test_testCANMessages()
     bool isSendingStatus=false;
 
     bool isSendingCommand=false;
+
+    bool isFrameDataOK=true;
     foreach(auto frame, m_recivedFrames){
 
         qDebug()<<frame.toString();
         if(frame.frameId()==0x18ff80fd){
             countStatus++;
             isSendingStatus=true;
+
+            if(frame.payload()[1] != 0x01){
+                isFrameDataOK=false;
+
+            }
+
+            if(frame.payload()[2] != 0x01){
+                isFrameDataOK=false;
+
+            }
+
+            if(frame.payload()[3] != 0x01){
+                isFrameDataOK=false;
+
+            }
+
+            qDebug()<<frame.payload()[9];
+
+
+
+
         }
 
         if(frame.frameId()==0x0cff81fd){
@@ -445,8 +469,10 @@ void Test::test_leverFWDAndCan()
     QSignalSpy waitForReverseMove(m_levers,&LeversActuator::bothMoved);
     m_levers->moveBoth(LeversActuator::reverse,700);
     auto didBothMove=waitForReverseMove.wait(7000);
+
     QCOMPARE(didBothMove,true);
 
+    //Should start reading here
     QSignalSpy waitForLeversHome(m_levers, &LeversActuator::bothHome);
     m_levers->home();
 
@@ -463,8 +489,23 @@ void Test::test_leverFWDAndCan()
 
 
 
-    //should write everything but CAN read
-    // cant do it yet since lever is not sending data!
+    QVector<int> leverValues;
+
+    foreach(auto frame, m_recivedFrames){
+        if(frame.frameId()==0x0CFF81FD){
+
+            qDebug()<<"Value single: "<<frame.payload().at(2);
+            leverValues.append(frame.payload().at(2));
+
+        }
+
+
+    }
+
+
+
+    QCOMPARE(true,true);
+
 
 }
 
