@@ -63,7 +63,7 @@ void Test::initTestCase()
     app = new QCoreApplication(argc, argv);
     QCoreApplication::processEvents();
 
-    m_port = new QSerialPort("/dev/ttyACM1");
+    m_port = new QSerialPort("/dev/ttyACM2");
     m_port->setBaudRate(QSerialPort::Baud115200);
     m_port->setDataBits(QSerialPort::Data8);
     m_port->setStopBits(QSerialPort::OneStop);
@@ -73,7 +73,7 @@ void Test::initTestCase()
         qDebug() << m_port->errorString();
     else qDebug()<< "Port open";
 
-    m_port1 = new QSerialPort("/dev/ttyACM2");
+    m_port1 = new QSerialPort("/dev/ttyACM1");
     m_port1->setBaudRate(QSerialPort::Baud115200);
     m_port1->setDataBits(QSerialPort::Data8);
     m_port1->setStopBits(QSerialPort::OneStop);
@@ -367,40 +367,67 @@ void Test::test_notNeutralSyncPressed()
 
     QCOMPARE(wasSyncActivated,false);
 
-
-
-    foreach(auto frame, m_recivedFrames){
-        qDebug()<<frame.toString();
-
-    }
-
-
-    QCOMPARE(true,true);
-
-
-
-
 }
 
 void Test::test_testCANMessages()
 {
-    // QSKIP("");
+   //QSKIP("");
     //unlock lever first
 
     QSignalSpy waitForUnlocked(m_KeyCardsActuator,&KeyCardsActuator::rightCardFinishedMoving);
     m_KeyCardsActuator->approchRightCard();
 
-    auto wasLeverUnlocked=waitForUnlocked.wait(7000);
-    QCOMPARE(wasLeverUnlocked,true);
+    auto wasLeverUnlocked=waitForUnlocked.wait(8000);
+    QCOMPARE(wasLeverUnlocked,true); //some serial problems right now
 
+    int countStatus=0;
+    int countCommand=0;
 
     QSignalSpy delayTenSeconds(m_KeyCardsActuator,&KeyCardsActuator::ghost);
 
     QCOMPARE(delayTenSeconds.wait(10000),false);
 
+    bool isSendingStatus=false;
+
+    bool isSendingCommand=false;
+    foreach(auto frame, m_recivedFrames){
+
+        qDebug()<<frame.toString();
+        if(frame.frameId()==0x18ff80fd){
+            countStatus++;
+            isSendingStatus=true;
+        }
+
+        if(frame.frameId()==0x0cff81fd){
+            countCommand++;
+            isSendingCommand=true;
+        }
+
+    }
 
 
+    bool wasEnoughCountStatus;
+    bool wasEnoughCountCommand;
+    //Around 10sec, around 20 status msg, around 200 command msg
+    if(countStatus>=18){
+        wasEnoughCountStatus = true;
+    }else {
+        wasEnoughCountStatus = false;
+    }
 
+    if(countCommand>=190){
+        wasEnoughCountCommand=true;
+    }else {
+        wasEnoughCountCommand=false;
+    }
+
+    qDebug()<<"Count of status: "<<countStatus;
+    qDebug()<<"Count of command: "<<countCommand;
+
+    QCOMPARE(isSendingCommand,true);
+    QCOMPARE(isSendingStatus,true);
+    QCOMPARE(wasEnoughCountStatus,true);
+    QCOMPARE(wasEnoughCountCommand,true);
 
 
 
@@ -409,6 +436,33 @@ void Test::test_testCANMessages()
 void Test::test_leverFWDAndCan()
 {
     QSKIP("");
+    QSignalSpy waitForUnlocked(m_KeyCardsActuator,&KeyCardsActuator::rightCardFinishedMoving);
+    m_KeyCardsActuator->approchRightCard();
+
+    auto wasLeverUnlocked=waitForUnlocked.wait(8000);
+    QCOMPARE(wasLeverUnlocked,true);
+
+    QSignalSpy waitForReverseMove(m_levers,&LeversActuator::bothMoved);
+    m_levers->moveBoth(LeversActuator::reverse,700);
+    auto didBothMove=waitForReverseMove.wait(7000);
+    QCOMPARE(didBothMove,true);
+
+    QSignalSpy waitForLeversHome(m_levers, &LeversActuator::bothHome);
+    m_levers->home();
+
+    auto isLeversHome=waitForLeversHome.wait(7000);
+    QCOMPARE(isLeversHome,true);
+
+
+    QSignalSpy waitForReverseMove2(m_levers, &LeversActuator::bothMoved);
+    m_levers->moveBoth(LeversActuator::reverse,700);
+    auto didBothMove2 = waitForReverseMove2.wait(8000);
+
+    QCOMPARE(didBothMove2,true);
+
+
+
+
     //should write everything but CAN read
     // cant do it yet since lever is not sending data!
 
