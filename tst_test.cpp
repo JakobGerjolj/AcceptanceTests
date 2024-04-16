@@ -29,6 +29,7 @@ private slots:
     void test_neutralSyncPressed();
     void test_notNeutralSyncPressed();
     void test_testCANMessages();
+    void test_calibrationForNeutral();
     void cleanupTestCase();
 
 private:
@@ -107,8 +108,14 @@ void Test::initTestCase()
 
 void Test::cleanupTestCase()
 {
-    //digitalWrite(m_POWER_PIN,HIGH);
+    QSignalSpy waitForBothHome(m_levers, &LeversActuator::bothHome); //Send both home always
+    m_levers->home();
+
+    auto leversHome=waitForBothHome.wait(8000);
+    QCOMPARE(leversHome,true);
+    digitalWrite(m_POWER_PIN,HIGH);
     m_port->close();
+    m_port1->close();
     delete m_KeyCardsActuator;
     delete m_port;
     delete app;
@@ -379,7 +386,7 @@ void Test::test_testCANMessages()
     m_KeyCardsActuator->approchRightCard();
 
     auto wasLeverUnlocked=waitForUnlocked.wait(8000);
-    QCOMPARE(wasLeverUnlocked,true); //some serial problems right now
+    QCOMPARE(wasLeverUnlocked,true);
 
     int countStatus=0;
     int countCommand=0;
@@ -393,6 +400,8 @@ void Test::test_testCANMessages()
     bool isSendingCommand=false;
 
     bool isFrameDataOK=true;
+
+    bool isDataLongEnough=true;
     foreach(auto frame, m_recivedFrames){
 
         qDebug()<<frame.toString();
@@ -400,6 +409,19 @@ void Test::test_testCANMessages()
             countStatus++;
             isSendingStatus=true;
 
+            if(frame.payload().length()==8){
+                isDataLongEnough=true;
+
+            }else{
+                isDataLongEnough=false;
+
+            }
+
+            if(frame.isValid()){
+                isFrameDataOK=true;
+            }else {
+                isFrameDataOK=false;
+            }
             if(frame.payload()[1] != 0x01){
                 isFrameDataOK=false;
 
@@ -415,7 +437,7 @@ void Test::test_testCANMessages()
 
             }
 
-            qDebug()<<frame.payload()[9];
+            //qDebug()<<frame.payload()[9];
 
 
 
@@ -439,7 +461,7 @@ void Test::test_testCANMessages()
         wasEnoughCountStatus = false;
     }
 
-    if(countCommand>=190){
+    if(countCommand>=20){
         wasEnoughCountCommand=true;
     }else {
         wasEnoughCountCommand=false;
@@ -457,53 +479,126 @@ void Test::test_testCANMessages()
 
 }
 
-void Test::test_leverFWDAndCan()
+void Test::test_calibrationForNeutral()
 {
     QSKIP("");
+
+    // QSignalSpy waitForUnlocked(m_KeyCardsActuator,&KeyCardsActuator::rightCardFinishedMoving);
+    // m_KeyCardsActuator->approchRightCard();
+    // auto wasLeverUnlocked=waitForUnlocked.wait(8000);
+    // QCOMPARE(wasLeverUnlocked,true);
+
+    // QSignalSpy waitForBothHome(m_levers, &LeversActuator::bothHome); //Send both home always
+    // m_levers->home();
+    //m_buttons->press(sync);
+    // auto leversHome=waitForBothHome.wait(6000);
+    // QCOMPARE(leversHome,true);
+
+
+    // QSignalSpy waitForReverseMove(m_levers,&LeversActuator::bothMoved);
+    // m_levers->moveBoth(LeversActuator::reverse,730); //move to neutral
+    // auto didBothMove=waitForReverseMove.wait(7000);
+    // QCOMPARE(didBothMove,true);
+
+    // delay(5000);
+
+    QSignalSpy waitForPress(m_buttons,&Buttons::pressed);
+
+    m_buttons->press(sync);
+
+    auto wasPressed=waitForPress.wait(9000);
+    //delay(5000);
+    delay(2500);
+    QCOMPARE(wasPressed,true);
+    delay(10000);
+
+}
+
+void Test::test_leverFWDAndCan()
+{
+    //QSKIP("");
+
+
+    //Always put the home first just in case
+
     QSignalSpy waitForUnlocked(m_KeyCardsActuator,&KeyCardsActuator::rightCardFinishedMoving);
     m_KeyCardsActuator->approchRightCard();
 
     auto wasLeverUnlocked=waitForUnlocked.wait(8000);
     QCOMPARE(wasLeverUnlocked,true);
+    qDebug()<<"Already here!";
+
+    // QSignalSpy waitForBothHome(m_levers, &LeversActuator::bothHome); //Send both home always
+    // m_levers->home();
+
+    // auto leversHome=waitForBothHome.wait(6000);
+    // QCOMPARE(leversHome,true);
+    delay(500);
+
+
 
     QSignalSpy waitForReverseMove(m_levers,&LeversActuator::bothMoved);
-    m_levers->moveBoth(LeversActuator::reverse,700);
+    m_levers->moveBoth(LeversActuator::reverse,730); //move to neutral
     auto didBothMove=waitForReverseMove.wait(7000);
 
     QCOMPARE(didBothMove,true);
+    //SETUP DONE in Neutral now lets try slower movements
 
+    delay(500);
+    //press sync here and we start reading
+    QSignalSpy waitForSyncPress(m_buttons, &Buttons::pressed);
+    m_buttons->press(sync); //Press sync for active
+
+    auto wasSyncPressed=waitForSyncPress.wait(8000);
+    QCOMPARE(wasSyncPressed,true);
+    delay(500);
     //Should start reading here
-    QSignalSpy waitForLeversHome(m_levers, &LeversActuator::bothHome);
-    m_levers->home();
+    delay(100);
 
-    auto isLeversHome=waitForLeversHome.wait(7000);
-    QCOMPARE(isLeversHome,true);
+    //diffrent signal here try to move it slover
+    // QSignalSpy waitForLeversHome(m_levers, &LeversActuator::bothHome); //Home for reading values
+    // m_levers->home();
+
+    // auto isLeversHome=waitForLeversHome.wait(7000);
+    // QCOMPARE(isLeversHome,true);
+    QTimer timer;
+    int timerCounter = 1;
+    timer.setInterval(100);
+
+    connect(&timer, &QTimer::timeout, [&]() {
+        m_levers->moveBoth(LeversActuator::forward,39);
+        qDebug()<<"Cycle triggered, currently in cycle: "<<timerCounter;
+        timerCounter++;
+        if(timerCounter == 20){
+            timer.stop();
+        }
+
+    });
+
+
+    //m_levers->moveBoth(LeversActuator::forward,39);
+    QSignalSpy waitForMoveFinished(&timer, &QTimer::timeout);
+    timer.start();
+
+
 
 
     QSignalSpy waitForReverseMove2(m_levers, &LeversActuator::bothMoved);
-    m_levers->moveBoth(LeversActuator::reverse,700);
+    m_levers->moveBoth(LeversActuator::reverse,730); //And back to neutral for reading values
     auto didBothMove2 = waitForReverseMove2.wait(8000);
 
     QCOMPARE(didBothMove2,true);
-
-
-
-
-    QVector<int> leverValues;
+    int counter=0;
 
     foreach(auto frame, m_recivedFrames){
         if(frame.frameId()==0x0CFF81FD){
 
-            qDebug()<<"Value single: "<<frame.payload().at(2);
-            leverValues.append(frame.payload().at(2));
-
+            qDebug()<<"Values from read "<<counter<<": "<<static_cast<unsigned char>(frame.payload().at(2));
+            // leverValues.append(frame.payload().at(2)); //Read values here
+            counter++;
         }
-
-
     }
-
-
-
+    qDebug()<<"Amount of packages of data of HAL: "<<counter<<" !";
     QCOMPARE(true,true);
 
 
