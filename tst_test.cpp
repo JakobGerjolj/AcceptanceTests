@@ -257,7 +257,7 @@ void Test::test_topLightsInNeutral()
     // delay(3000);
     //m_levers->home();
     QSignalSpy waitForReverseMove(m_levers,&LeversActuator::bothMoved);
-    m_levers->moveBoth(LeversActuator::reverse,700); //method move to neutral
+    m_levers->moveBoth(LeversActuator::reverse,730); //method move to neutral
     auto didBothMove=waitForReverseMove.wait(7000);
     QCOMPARE(didBothMove,true);
 
@@ -470,6 +470,8 @@ void Test::test_testCANMessages()
     qDebug()<<"Count of status: "<<countStatus;
     qDebug()<<"Count of command: "<<countCommand;
 
+    QCOMPARE(isDataLongEnough,true);
+    QCOMPARE(isFrameDataOK,true);
     QCOMPARE(isSendingCommand,true);
     QCOMPARE(isSendingStatus,true);
     QCOMPARE(wasEnoughCountStatus,true);
@@ -516,7 +518,7 @@ void Test::test_calibrationForNeutral()
 
 void Test::test_leverFWDAndCan()
 {
-    //QSKIP("");
+    //QSKIP("Wait for proper messages");
 
 
     //Always put the home first just in case
@@ -533,7 +535,7 @@ void Test::test_leverFWDAndCan()
 
     // auto leversHome=waitForBothHome.wait(6000);
     // QCOMPARE(leversHome,true);
-    delay(500);
+    //delay(500);
 
 
 
@@ -544,41 +546,44 @@ void Test::test_leverFWDAndCan()
     QCOMPARE(didBothMove,true);
     //SETUP DONE in Neutral now lets try slower movements
 
-    delay(500);
+    //delay(500);
     //press sync here and we start reading
     QSignalSpy waitForSyncPress(m_buttons, &Buttons::pressed);
     m_buttons->press(sync); //Press sync for active
 
     auto wasSyncPressed=waitForSyncPress.wait(8000);
     QCOMPARE(wasSyncPressed,true);
-    delay(500);
+    //delay(500);
     //Should start reading here
-    delay(100);
+    //delay(100);
 
     //diffrent signal here try to move it slover
-    // QSignalSpy waitForLeversHome(m_levers, &LeversActuator::bothHome); //Home for reading values
-    // m_levers->home();
+    QSignalSpy waitForLeversHome(m_levers, &LeversActuator::bothHome); //Home for reading values
+    m_levers->home();
 
-    // auto isLeversHome=waitForLeversHome.wait(7000);
-    // QCOMPARE(isLeversHome,true);
-    QTimer timer;
-    int timerCounter = 1;
-    timer.setInterval(100);
+    auto isLeversHome=waitForLeversHome.wait(7000);
+    QCOMPARE(isLeversHome,true);
+    //QSignalSpy(m_levers,LeversActuator::);
 
-    connect(&timer, &QTimer::timeout, [&]() {
-        m_levers->moveBoth(LeversActuator::forward,39);
-        qDebug()<<"Cycle triggered, currently in cycle: "<<timerCounter;
-        timerCounter++;
-        if(timerCounter == 20){
-            timer.stop();
-        }
 
-    });
+    // QTimer timer;
+    // int timerCounter = 1;
+    // timer.setInterval(100);
+
+    // connect(&timer, &QTimer::timeout, [&]() {
+    //     m_levers->moveBoth(LeversActuator::forward,39);
+    //     qDebug()<<"Cycle triggered, currently in cycle: "<<timerCounter;
+    //     timerCounter++;
+    //     if(timerCounter == 20){
+    //         timer.stop();
+    //     }
+
+    // });
 
 
     //m_levers->moveBoth(LeversActuator::forward,39);
-    QSignalSpy waitForMoveFinished(&timer, &QTimer::timeout);
-    timer.start();
+    // QSignalSpy waitForMoveFinished(&timer, &QTimer::timeout);
+    // timer.start();
 
 
 
